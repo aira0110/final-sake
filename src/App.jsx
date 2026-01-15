@@ -9,9 +9,9 @@ import {
   X, 
   Send, 
   Clock,
-  MoreHorizontal,
   AlertCircle
 } from 'lucide-react';
+import './App.css'; // CSSファイルを読み込み
 
 // Firebase imports
 import { initializeApp } from "firebase/app";
@@ -34,12 +34,6 @@ import {
 } from "firebase/firestore";
 
 // --- Firebase Initialization ---
-// 環境変数から設定を読み込みます
-// Import the functions you need from the SDKs you need
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAx0ovUagyDVAhNeIKIEe9AtuKbMrOC9Mo",
   authDomain: "final-sake.firebaseapp.com",
@@ -63,14 +57,8 @@ const Toast = ({ message, type, onClose }) => {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const bgColors = {
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    info: 'bg-blue-500'
-  };
-
   return (
-    <div className={`fixed top-4 right-4 ${bgColors[type] || 'bg-gray-800'} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-down`}>
+    <div className={`toast toast-${type}`}>
       {type === 'error' && <AlertCircle size={20} />}
       <span>{message}</span>
     </div>
@@ -82,15 +70,15 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl transform transition-all scale-100">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <h3 className="text-xl font-bold text-gray-800">{title}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition">
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3 className="modal-title">{title}</h3>
+          <button onClick={onClose} className="btn-close">
             <X size={24} />
           </button>
         </div>
-        <div className="p-6">
+        <div className="modal-body">
           {children}
         </div>
       </div>
@@ -137,8 +125,9 @@ export default function App() {
   // 2. Data Sync (Firestore)
   useEffect(() => {
     if (!user) return;
-
-    // PUBLIC collection path as per rules
+    const appId = "1:977978625727:web:c014149e58ed0f7140000a"; // Using appId from config for path
+    
+    // collection path as per previous code
     const postsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'posts');
 
     const unsubscribe = onSnapshot(postsCollection, 
@@ -146,13 +135,10 @@ export default function App() {
         const postsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          // Handle potential missing timestamps
           createdAt: doc.data().createdAt?.toDate() || new Date()
         }));
 
-        // Sort in memory (Rule: No complex queries in Firestore)
         postsData.sort((a, b) => b.createdAt - a.createdAt);
-
         setPosts(postsData);
         setLoading(false);
       },
@@ -173,6 +159,8 @@ export default function App() {
     if (!newPost.title.trim() || !newPost.content.trim()) return;
 
     setSubmitting(true);
+    const appId = "1:977978625727:web:c014149e58ed0f7140000a";
+    
     try {
       const postsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'posts');
       await addDoc(postsCollection, {
@@ -197,6 +185,7 @@ export default function App() {
 
   const handleDeletePost = async (postId) => {
     if (!window.confirm("本当にこの投稿を削除しますか？")) return;
+    const appId = "1:977978625727:web:c014149e58ed0f7140000a";
     try {
       const postRef = doc(db, 'artifacts', appId, 'public', 'data', 'posts', postId);
       await deleteDoc(postRef);
@@ -207,6 +196,7 @@ export default function App() {
   };
 
   const handleLike = async (post) => {
+    const appId = "1:977978625727:web:c014149e58ed0f7140000a";
     try {
       const postRef = doc(db, 'artifacts', appId, 'public', 'data', 'posts', post.id);
       await updateDoc(postRef, {
@@ -236,88 +226,85 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="app-container">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-indigo-600 p-2 rounded-lg text-white">
+      <header className="app-header">
+        <div className="header-inner">
+          <div className="header-logo">
+            <div className="logo-icon-bg">
               <MessageSquare size={20} fill="currentColor" />
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 hidden sm:block">
+            <h1 className="logo-text">
               React Board
             </h1>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search size={18} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+          <div className="header-actions">
+            <div className="search-wrapper">
+              <div className="search-icon-wrapper">
+                <Search size={18} />
               </div>
               <input
                 type="text"
                 placeholder="キーワードで検索..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white w-32 sm:w-64 transition-all"
+                className="search-input"
               />
             </div>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full text-sm font-medium transition shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
+              className="btn-primary"
             >
               <Plus size={18} />
-              <span className="hidden sm:inline">投稿する</span>
+              <span>投稿する</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="main-content">
         
         {loading ? (
           // Loading Skeletons
-          <div className="space-y-4">
+          <div>
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-pulse">
-                <div className="h-6 bg-slate-200 rounded w-3/4 mb-4"></div>
-                <div className="h-4 bg-slate-200 rounded w-full mb-2"></div>
-                <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+              <div key={i} className="skeleton-card">
+                <div className="skeleton-line" style={{ width: '75%' }}></div>
+                <div className="skeleton-line" style={{ width: '100%', height: '0.8rem' }}></div>
+                <div className="skeleton-line" style={{ width: '50%', height: '0.8rem' }}></div>
               </div>
             ))}
           </div>
         ) : filteredPosts.length === 0 ? (
           // Empty State
-          <div className="text-center py-20">
-            <div className="bg-slate-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+          <div className="empty-state">
+            <div className="empty-icon">
               <MessageSquare size={40} />
             </div>
-            <h3 className="text-lg font-medium text-slate-600">まだ投稿がありません</h3>
-            <p className="text-slate-500 mb-6">最初の投稿を作成して盛り上げましょう！</p>
+            <h3 className="empty-title">まだ投稿がありません</h3>
+            <p className="empty-desc">最初の投稿を作成して盛り上げましょう！</p>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="text-indigo-600 font-medium hover:underline"
+              className="btn-text"
             >
               投稿を作成する
             </button>
           </div>
         ) : (
           // Post List
-          <div className="grid gap-6">
+          <div className="posts-grid">
             {filteredPosts.map((post) => (
-              <article 
-                key={post.id} 
-                className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-100 to-violet-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+              <article key={post.id} className="post-card">
+                <div className="post-header">
+                  <div className="author-info">
+                    <div className="avatar">
                       {post.authorName.charAt(0) || <User size={14}/>}
                     </div>
-                    <span className="font-medium text-slate-700">{post.authorName || '匿名'}</span>
+                    <span className="author-name">{post.authorName || '匿名'}</span>
                     <span>•</span>
-                    <span className="flex items-center gap-1">
+                    <span className="post-date">
                       <Clock size={12} />
                       {formatDate(post.createdAt)}
                     </span>
@@ -327,7 +314,7 @@ export default function App() {
                   {user && post.authorId === user.uid && (
                     <button 
                       onClick={() => handleDeletePost(post.id)}
-                      className="text-slate-300 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      className="btn-delete"
                       title="削除"
                     >
                       <Trash2 size={16} />
@@ -335,30 +322,30 @@ export default function App() {
                   )}
                 </div>
 
-                <h2 className="text-xl font-bold text-slate-800 mb-2 leading-tight">
+                <h2 className="post-title">
                   {post.title}
                 </h2>
                 
-                <p className="text-slate-600 whitespace-pre-wrap leading-relaxed mb-6">
+                <p className="post-content">
                   {post.content}
                 </p>
 
-                <div className="flex items-center gap-4 border-t border-slate-50 pt-4 mt-2">
+                <div className="post-footer">
                   <button 
                     onClick={() => handleLike(post)}
-                    className="flex items-center gap-2 text-slate-500 hover:text-pink-500 transition group/like"
+                    className="btn-action"
                   >
-                    <div className="p-2 rounded-full group-hover/like:bg-pink-50 transition">
-                      <Heart size={20} className={post.likes > 0 ? "fill-pink-500 text-pink-500" : ""} />
+                    <div className="btn-icon-wrapper like">
+                      <Heart size={20} className={post.likes > 0 ? "icon-heart-filled" : ""} />
                     </div>
-                    <span className="font-medium text-sm">{post.likes || 0}</span>
+                    <span>{post.likes || 0}</span>
                   </button>
                   
-                  <button className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition group/comment">
-                     <div className="p-2 rounded-full group-hover/comment:bg-indigo-50 transition">
+                  <button className="btn-action comment">
+                     <div className="btn-icon-wrapper comment">
                       <MessageSquare size={20} />
                     </div>
-                    <span className="font-medium text-sm">コメント</span>
+                    <span>コメント</span>
                   </button>
                 </div>
               </article>
@@ -370,7 +357,7 @@ export default function App() {
       {/* Floating Action Button (Mobile) */}
       <button 
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-6 right-6 sm:hidden bg-indigo-600 text-white p-4 rounded-full shadow-xl hover:bg-indigo-700 transition active:scale-90 z-40"
+        className="fab-btn"
       >
         <Plus size={24} />
       </button>
@@ -381,52 +368,52 @@ export default function App() {
         onClose={() => setIsModalOpen(false)}
         title="新しい投稿を作成"
       >
-        <form onSubmit={handleCreatePost} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">ニックネーム</label>
+        <form onSubmit={handleCreatePost}>
+          <div className="form-group">
+            <label className="form-label">ニックネーム</label>
             <input
               type="text"
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+              className="form-input"
               placeholder="表示名（任意）"
               value={newPost.authorName}
               onChange={(e) => setNewPost({...newPost, authorName: e.target.value})}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">タイトル <span className="text-red-500">*</span></label>
+          <div className="form-group">
+            <label className="form-label">タイトル <span className="required">*</span></label>
             <input
               type="text"
               required
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+              className="form-input"
               placeholder="記事のタイトル"
               value={newPost.title}
               onChange={(e) => setNewPost({...newPost, title: e.target.value})}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">本文 <span className="text-red-500">*</span></label>
+          <div className="form-group">
+            <label className="form-label">本文 <span className="required">*</span></label>
             <textarea
               required
               rows={5}
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition resize-none"
+              className="form-textarea"
               placeholder="ここに内容を書いてください..."
               value={newPost.content}
               onChange={(e) => setNewPost({...newPost, content: e.target.value})}
             />
           </div>
           
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="modal-footer">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-5 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium transition"
+              className="btn-cancel"
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-md shadow-indigo-200 transition flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="btn-submit"
             >
               {submitting ? '送信中...' : (
                 <>
