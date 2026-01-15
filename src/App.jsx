@@ -9,17 +9,20 @@ import {
   X, 
   Send, 
   Clock,
-  AlertCircle
+  AlertCircle,
+  LogIn,   // 追加
+  LogOut   // 追加
 } from 'lucide-react';
-import './App.css'; // CSSファイルを読み込み
+import './App.css';
 
 // Firebase imports
 import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
-  signInAnonymously, 
   onAuthStateChanged,
-  signInWithCustomToken
+  signInWithPopup,      // 追加: ポップアップログイン
+  GoogleAuthProvider,   // 追加: Googleプロバイダ
+  signOut               // 追加: ログアウト
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -99,35 +102,39 @@ export default function App() {
 
   // --- Auth & Data Fetching ---
 
-  // 1. Authentication
+  // 1. Authentication (Google Login Logic)
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (error) {
-        console.error("Auth error:", error);
-        setToast({ message: "認証に失敗しました", type: "error" });
-      }
-    };
-    initAuth();
-
+    // ユーザーのログイン状態を監視
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (!currentUser) setLoading(false);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
+  const handleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      setToast({ message: "ログインしました", type: "success" });
+    } catch (error) {
+      console.error("Login error:", error);
+      setToast({ message: "ログインに失敗しました", type: "error" });
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setToast({ message: "ログアウトしました", type: "info" });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   // 2. Data Sync (Firestore)
   useEffect(() => {
-    if (!user) return;
-    const appId = "1:977978625727:web:c014149e58ed0f7140000a"; // Using appId from config for path
-    
-    // collection path as per previous code
+    const appId = "1:977978625727:web:c014149e58ed0f7140000a"; 
     const postsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'posts');
 
     const unsubscribe = onSnapshot(postsCollection, 
@@ -140,7 +147,7 @@ export default function App() {
 
         postsData.sort((a, b) => b.createdAt - a.createdAt);
         setPosts(postsData);
-        setLoading(false);
+        if (!user) setLoading(false); // ユーザーがいなくてもロード完了とする
       },
       (error) => {
         console.error("Firestore error:", error);
@@ -150,12 +157,16 @@ export default function App() {
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, []); // user依存を削除（誰でも投稿は見れるようにするため）
 
   // --- Actions ---
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
+    if (!user) {
+      setToast({ message: "投稿するにはログインが必要です", type: "error" });
+      return;
+    }
     if (!newPost.title.trim() || !newPost.content.trim()) return;
 
     setSubmitting(true);
@@ -166,8 +177,10 @@ export default function App() {
       await addDoc(postsCollection, {
         title: newPost.title,
         content: newPost.content,
-        authorName: newPost.authorName || '匿名ユーザー',
+        // 入力がなければユーザー名、それもなければ匿名
+        authorName: newPost.authorName || user.displayName || '匿名ユーザー',
         authorId: user.uid,
+        authorPhoto: user.photoURL, // アイコン画像用に保存
         createdAt: serverTimestamp(),
         likes: 0
       });
@@ -225,6 +238,15 @@ export default function App() {
     }).format(date);
   };
 
+  // --- Modal Open Check ---
+  const openCreateModal = () => {
+    if (!user) {
+      handleLogin(); // ログインしていなければログイン画面（ポップアップ）を出す
+    } else {
+      setIsModalOpen(true);
+    }
+  };
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -252,8 +274,29 @@ export default function App() {
                 className="search-input"
               />
             </div>
+
+            {/* Login/Logout Button */}
+            {!user ? (
+              <button onClick={handleLogin} className="btn-primary" style={{backgroundColor: '#4285F4'}}>
+                <LogIn size={18} />
+                <span>ログイン</span>
+              </button>
+            ) : (
+              <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                 {/* User Avatar if available */}
+                 {user.photoURL ? (
+                   <img src={user.photoURL} alt="user" style={{width: 32, height: 32, borderRadius: '50%'}} />
+                 ) : (
+                   <div className="avatar" style={{width: 32, height: 32}}><User size={16}/></div>
+                 )}
+                 <button onClick={handleLogout} className="btn-text" style={{fontSize: '0.875rem', color: '#64748b', textDecoration: 'none'}}>
+                   <LogOut size={18} />
+                 </button>
+              </div>
+            )}
+
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={openCreateModal}
               className="btn-primary"
             >
               <Plus size={18} />
@@ -286,7 +329,7 @@ export default function App() {
             <h3 className="empty-title">まだ投稿がありません</h3>
             <p className="empty-desc">最初の投稿を作成して盛り上げましょう！</p>
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={openCreateModal}
               className="btn-text"
             >
               投稿を作成する
@@ -300,7 +343,10 @@ export default function App() {
                 <div className="post-header">
                   <div className="author-info">
                     <div className="avatar">
-                      {post.authorName.charAt(0) || <User size={14}/>}
+                      {post.authorPhoto ? 
+                        <img src={post.authorPhoto} alt="" style={{width: '100%', height: '100%', borderRadius: '50%'}}/> :
+                        (post.authorName?.charAt(0) || <User size={14}/>)
+                      }
                     </div>
                     <span className="author-name">{post.authorName || '匿名'}</span>
                     <span>•</span>
@@ -356,7 +402,7 @@ export default function App() {
 
       {/* Floating Action Button (Mobile) */}
       <button 
-        onClick={() => setIsModalOpen(true)}
+        onClick={openCreateModal}
         className="fab-btn"
       >
         <Plus size={24} />
@@ -374,7 +420,7 @@ export default function App() {
             <input
               type="text"
               className="form-input"
-              placeholder="表示名（任意）"
+              placeholder={user?.displayName || "表示名（任意）"}
               value={newPost.authorName}
               onChange={(e) => setNewPost({...newPost, authorName: e.target.value})}
             />

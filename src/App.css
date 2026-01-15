@@ -1,29 +1,21 @@
 /* src/App.css */
 :root {
-  /* 色定義 (Tailwindのカラーパレットを再現) */
-  --primary-color: #4f46e5; /* indigo-600 */
+  /* カラーパレット (TailwindのSlate/Indigo系を再現) */
+  --primary: #4f46e5;       /* indigo-600 */
   --primary-hover: #4338ca; /* indigo-700 */
-  --primary-light: #e0e7ff; /* indigo-100 */
-  
   --bg-main: #f8fafc;       /* slate-50 */
   --bg-card: #ffffff;
-  
-  --text-main: #0f172a;     /* slate-900 */
+  --text-main: #1e293b;     /* slate-800 */
   --text-body: #475569;     /* slate-600 */
-  --text-muted: #64748b;    /* slate-500 */
-  --text-light: #94a3b8;    /* slate-400 */
-  
-  --border-color: #e2e8f0;  /* slate-200 */
-  
-  --danger-color: #ef4444;  /* red-500 */
-  --danger-bg: #fef2f2;     /* red-50 */
-  --pink-color: #ec4899;    /* pink-500 */
-  --pink-bg: #fdf2f8;       /* pink-50 */
+  --text-muted: #94a3b8;    /* slate-400 */
+  --border: #e2e8f0;        /* slate-200 */
+  --danger: #ef4444;        /* red-500 */
+  --pink: #ec4899;          /* pink-500 */
   
   /* シャドウ */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 body {
@@ -31,10 +23,10 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
-  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 
-/* --- コンテナ全体 --- */
+/* --- レイアウト全体 --- */
 .app-container {
   min-height: 100vh;
   display: flex;
@@ -47,9 +39,8 @@ body {
   top: 0;
   z-index: 30;
   background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
   height: 64px;
 }
 
@@ -69,14 +60,12 @@ body {
   gap: 0.5rem;
 }
 
-.logo-icon-bg {
-  background-color: var(--primary-color);
+.logo-icon {
+  background-color: var(--primary);
   color: white;
   padding: 0.5rem;
   border-radius: 0.5rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .logo-text {
@@ -85,7 +74,7 @@ body {
   background: linear-gradient(to right, #4f46e5, #7c3aed);
   -webkit-background-clip: text;
   color: transparent;
-  display: none;
+  display: none; /* モバイルでは非表示 */
 }
 @media (min-width: 640px) {
   .logo-text { display: block; }
@@ -97,25 +86,23 @@ body {
   gap: 1rem;
 }
 
-/* 検索バー */
-.search-wrapper {
+/* 検索ボックス */
+.search-box {
   position: relative;
 }
 
-.search-icon-wrapper {
+.search-icon {
   position: absolute;
-  top: 0;
-  bottom: 0;
   left: 0.75rem;
-  display: flex;
-  align-items: center;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
   pointer-events: none;
-  color: var(--text-light);
 }
 
 .search-input {
   padding: 0.5rem 1rem 0.5rem 2.5rem;
-  background-color: #f1f5f9; /* slate-100 */
+  background-color: #f1f5f9;
   border: none;
   border-radius: 9999px;
   font-size: 0.875rem;
@@ -125,17 +112,17 @@ body {
 
 .search-input:focus {
   background-color: white;
-  outline: 2px solid var(--primary-color);
-  width: 16rem;
+  outline: 2px solid var(--primary);
+  width: 12rem;
+}
+@media (min-width: 640px) {
+  .search-input { width: 10rem; }
+  .search-input:focus { width: 16rem; }
 }
 
-@media (max-width: 640px) {
-  .search-input:focus { width: 10rem; }
-}
-
-/* ボタン類 */
+/* プライマリボタン */
 .btn-primary {
-  background-color: var(--primary-color);
+  background-color: var(--primary);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 9999px;
@@ -146,88 +133,37 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s;
 }
 
 .btn-primary:hover {
   background-color: var(--primary-hover);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
-.btn-primary span {
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-label {
   display: none;
 }
 @media (min-width: 640px) {
-  .btn-primary span { display: inline; }
+  .btn-label { display: inline; }
 }
 
 /* --- メインコンテンツ --- */
 .main-content {
-  max-width: 768px; /* max-w-3xl */
+  max-width: 768px;
   margin: 0 auto;
   padding: 2rem 1rem;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* ローディングスケルトン */
-.skeleton-card {
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid #f1f5f9;
-  margin-bottom: 1rem;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-.skeleton-line {
-  background-color: #e2e8f0;
-  border-radius: 0.25rem;
-  margin-bottom: 1rem;
-  height: 1rem;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* 空の状態 */
-.empty-state {
-  text-align: center;
-  padding: 5rem 0;
-}
-.empty-icon {
-  background-color: #f1f5f9;
-  width: 6rem;
-  height: 6rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem auto;
-  color: var(--text-light);
-}
-.empty-title {
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: var(--text-body);
-  margin-bottom: 0.5rem;
-}
-.empty-desc {
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
-}
-.btn-text {
-  color: var(--primary-color);
-  font-weight: 500;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
 /* 投稿カード */
-.posts-grid {
+.post-list {
   display: grid;
   gap: 1.5rem;
 }
@@ -238,7 +174,7 @@ body {
   padding: 1.5rem;
   border: 1px solid #f1f5f9;
   box-shadow: var(--shadow-sm);
-  transition: all 0.2s;
+  transition: box-shadow 0.2s;
 }
 
 .post-card:hover {
@@ -264,18 +200,18 @@ body {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: linear-gradient(to top right, var(--primary-light), #ede9fe);
+  background: linear-gradient(to top right, #e0e7ff, #ede9fe);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary-color);
-  font-weight: 700;
+  font-weight: bold;
   font-size: 0.75rem;
 }
 
 .author-name {
   font-weight: 500;
-  color: var(--text-body);
+  color: #334155;
 }
 
 .post-date {
@@ -284,33 +220,29 @@ body {
   gap: 0.25rem;
 }
 
+/* 削除ボタン */
 .btn-delete {
-  color: #cbd5e1;
   background: none;
   border: none;
+  color: #cbd5e1;
   padding: 0.5rem;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s;
-  opacity: 0;
-}
-.post-card:hover .btn-delete {
-  opacity: 1;
 }
 .btn-delete:hover {
-  color: var(--danger-color);
-  background-color: var(--danger-bg);
+  color: var(--danger);
+  background-color: #fef2f2;
 }
 
 .post-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-main);
   margin: 0 0 0.5rem 0;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
-.post-content {
+.post-body {
   color: var(--text-body);
   white-space: pre-wrap;
   line-height: 1.6;
@@ -319,11 +251,9 @@ body {
 
 .post-footer {
   display: flex;
-  align-items: center;
   gap: 1rem;
   border-top: 1px solid #f8fafc;
   padding-top: 1rem;
-  margin-top: 0.5rem;
 }
 
 .btn-action {
@@ -333,63 +263,30 @@ body {
   background: none;
   border: none;
   color: var(--text-muted);
+  font-size: 0.875rem;
   cursor: pointer;
   transition: color 0.2s;
-  padding: 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
 }
 
-.btn-icon-wrapper {
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* いいねボタン */
-.btn-action:hover .btn-icon-wrapper.like {
-  background-color: var(--pink-bg);
-}
 .btn-action:hover {
-  color: var(--pink-color);
-}
-.icon-heart-filled {
-  fill: var(--pink-color);
-  color: var(--pink-color);
+  background-color: #f8fafc;
 }
 
-/* コメントボタン */
+.btn-action.like:hover {
+  color: var(--pink);
+  background-color: #fdf2f8;
+}
+
 .btn-action.comment:hover {
-  color: var(--primary-color);
-}
-.btn-action:hover .btn-icon-wrapper.comment {
-  background-color: var(--primary-light);
+  color: var(--primary);
+  background-color: #e0e7ff;
 }
 
-/* --- モバイル用FAB --- */
-.fab-btn {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  background-color: var(--primary-color);
-  color: white;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  border: none;
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 40;
-}
-.fab-btn:active {
-  transform: scale(0.95);
-}
-@media (min-width: 640px) {
-  .fab-btn { display: none; }
+.icon-heart-filled {
+  fill: var(--pink);
+  color: var(--pink);
 }
 
 /* --- モーダル --- */
@@ -409,9 +306,10 @@ body {
   background-color: white;
   border-radius: 1rem;
   width: 100%;
-  max-width: 32rem; /* max-w-lg */
-  box-shadow: var(--shadow-2xl);
-  overflow: hidden;
+  max-width: 32rem;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
@@ -423,23 +321,22 @@ body {
 }
 
 .modal-title {
+  margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-main);
-  margin: 0;
 }
 
 .btn-close {
-  color: var(--text-light);
   background: none;
   border: none;
+  color: #94a3b8;
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 50%;
 }
 .btn-close:hover {
-  color: var(--text-body);
   background-color: #f1f5f9;
+  color: #64748b;
 }
 
 .modal-body {
@@ -454,29 +351,29 @@ body {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-body);
   margin-bottom: 0.25rem;
+  color: #334155;
 }
 
 .required {
-  color: var(--danger-color);
+  color: var(--danger);
 }
 
 .form-input, .form-textarea {
   width: 100%;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   font-family: inherit;
   font-size: 1rem;
-  outline: none;
-  transition: all 0.2s;
   box-sizing: border-box; /* 重要 */
+  transition: all 0.2s;
 }
 
 .form-input:focus, .form-textarea:focus {
+  outline: none;
   border-color: transparent;
-  box-shadow: 0 0 0 2px var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary);
 }
 
 .form-textarea {
@@ -487,15 +384,15 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .btn-cancel {
-  padding: 0.5rem 1.25rem;
-  border-radius: 0.5rem;
-  color: var(--text-body);
   background: none;
   border: none;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
 }
@@ -504,14 +401,13 @@ body {
 }
 
 .btn-submit {
-  padding: 0.5rem 1.25rem;
-  border-radius: 0.5rem;
-  background-color: var(--primary-color);
+  background-color: var(--primary);
   color: white;
   border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -535,15 +431,82 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   z-index: 100;
   animation: slideIn 0.3s ease-out;
 }
-@keyframes slideIn {
-  from { transform: translateY(-1rem); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
 
 .toast-success { background-color: #22c55e; }
-.toast-error { background-color: var(--danger-color); }
+.toast-error { background-color: var(--danger); }
 .toast-info { background-color: #3b82f6; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- モバイル用FAB --- */
+.fab-button {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 40;
+}
+@media (min-width: 640px) {
+  .fab-button { display: none; }
+}
+
+/* --- ローディングスケルトン --- */
+.skeleton-card {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #f1f5f9;
+  margin-bottom: 1rem;
+  animation: pulse 2s infinite;
+}
+.skeleton-bar {
+  background-color: #e2e8f0;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 空の状態 */
+.empty-state {
+  text-align: center;
+  padding: 5rem 0;
+}
+.empty-icon {
+  background-color: #f1f5f9;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: #94a3b8;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+}
